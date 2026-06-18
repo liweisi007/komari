@@ -74,8 +74,8 @@ docker run -d \
   # -e UUID="your-uuid-here" \
   # -e ARGO_DOMAIN="your-domain.com" \
   # -e CF_IP="your-cf-ip" \
+  # 【如果启用了 UUID 且未设置 ARGO_DOMAIN，需要暴露 CADDY_PROXY_PORT 端口（与 CADDY_PROXY_PORT 值保持一致）】
   # -e CADDY_PROXY_PORT="8888" \
-  # 【如果启用了 UUID 且未设置 ARGO_DOMAIN，需要暴露 CADDY_PROXY_PORT 端口】
   # -p 8888:8888 \
   # 【可选】如果你需要启用 Cloudflare Tunnel，请取消注释并填写以下两行
   # -e KOMARI_ENABLE_CLOUDFLARED="true" \
@@ -86,6 +86,36 @@ docker run -d \
 ```
 
 或者使用仓库中的 `docker-copmose.yml` 来部署，命令：`docker compose up -d`
+
+### 自定义 CADDY_PROXY_PORT 的示例
+
+如果你想使用不同的反代端口（例如 9999 而不是默认的 8888），可以这样配置：
+
+```bash
+docker run -d \
+  --name komari \
+  --restart unless-stopped \
+  -p 25774:25774 \
+  -p 9999:9999 \                    # 暴露自定义的反代端口
+  -v ./komari-data:/app/data \
+  -e GH_BACKUP_USER="your_github_username" \
+  -e GH_REPO="your_private_repo_name" \
+  -e GH_PAT="your_github_personal_access_token" \
+  -e GH_EMAIL="your_github_email@example.com" \
+  -e ADMIN_USERNAME="yourusername" \
+  -e ADMIN_PASSWORD="yourpassword" \
+  -e UUID="your-uuid-here" \
+  -e ARGO_DOMAIN="your-domain.com" \     # 如果设置了域名，下面不需要暴露反代端口
+  # -e ARGO_DOMAIN="" \                   # 如果不设置域名（自动获取公网IP），则需要暴露反代端口
+  -e CADDY_PROXY_PORT="9999" \           # 自定义为 9999
+  -e CF_IP="your-cf-ip" \
+  # -p 9999:9999 \                       # 取消注释来暴露自定义的反代端口
+  --log-opt max-size=5m \
+  --log-opt max-file=5 \
+  ghcr.io/jyucoeng/komari:latest
+```
+
+**注意**：`-p` 中的端口映射必须与 `CADDY_PROXY_PORT` 的值保持一致（都是 9999）
 
 ## 备份还原
 
